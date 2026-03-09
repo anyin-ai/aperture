@@ -136,9 +136,9 @@ At least one LLM API key is required.
 
 ## Roadmap
 
-- [x] Core audit engine
-- [x] BYOK multi-provider support
-- [x] Brand mention detection
+- [ ] Core audit engine
+- [ ] BYOK multi-provider support
+- [ ] Brand mention detection
 - [ ] Web dashboard
 - [ ] Google AI Overviews integration
 - [ ] Citation source extraction
