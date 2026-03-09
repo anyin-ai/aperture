@@ -9,111 +9,120 @@
 ### Prerequisites
 
 - Docker and Docker Compose
-- At least one LLM API key
+- API keys for the AI providers you want to use (OpenAI, Perplexity, etc.)
 
-### Installation
+### 1. Clone and Start
 
 ```bash
-git clone https://github.com/AnyinAI/aperture.git
+git clone https://github.com/anyin-ai/aperture
 cd aperture
-cp .env.example .env
-```
-
-Add your API keys to `.env`:
-
-```env
-OPENAI_API_KEY=sk-...
-PERPLEXITY_API_KEY=pplx-...
-# Add any other providers
-```
-
-Start the stack:
-
-```bash
 docker compose up -d
 ```
 
-Open `http://localhost:3000` in your browser.
+The UI is available at **http://localhost:3000** and the API at **http://localhost:8000**.
 
----
+### 2. Configure API Keys
 
-## How It Works
+1. Open **http://localhost:3000**
+2. Go to **Settings**
+3. Enter your API keys for the providers you want to use:
+   - **OpenAI**: Get your key from [platform.openai.com](https://platform.openai.com/api-keys)
+   - **Perplexity**: Get your key from [perplexity.ai](https://www.perplexity.ai/settings/api)
+4. Click **Save** for each key
 
-### 1. Define your brand and competitors
+Keys are stored in your local SQLite database and are never sent to any third party.
 
-```yaml
-# config/brands.yml
-brand:
-  name: "YourBrand"
-  aliases: ["Your Brand", "yourbrand.com"]
+### 3. Set Up Your Brand
 
-competitors:
-  - name: "Competitor A"
-    aliases: ["CompA", "competitora.com"]
-  - name: "Competitor B"
-    aliases: ["CompB"]
-```
+1. Go to **Brands**
+2. Click **Add Brand**
+3. Enter your brand name, domain, and description
+4. Add your competitors so Aperture can track whether they get cited instead of you
 
-### 2. Define your audit queries
+### 4. Create Queries
 
-```yaml
-# config/queries.yml
-queries:
-  - text: "Best USB-C hub for MacBook"
-    languages: [en, de, fr]
-    category: "product_recommendation"
-  - text: "Most reliable GaN charger under €50"
-    languages: [en, de]
-    category: "purchase_intent"
-```
+1. Go to **Queries**
+2. Click **Add Query**
+3. Add the questions that your target audience asks AI engines:
+   - "What is the best project management tool?"
+   - "Recommend a CRM for small businesses"
+   - "Which tool should I use for team collaboration?"
+4. Set the language and category for each query
 
-### 3. Run an audit
+### 5. Run an Audit
 
-```bash
-aperture audit run --config config/
-```
+1. Go to **Audits**
+2. Click **New Audit**
+3. Select your brand, provider (OpenAI or Perplexity), and model
+4. Select the queries to run
+5. Click **Run Audit**
 
-### 4. View results
+Aperture will send each query to the selected AI engine and analyze the response for brand mentions. Results appear in real-time.
 
-Open the dashboard at `http://localhost:3000` or export:
+### 6. Track Results
 
-```bash
-aperture export --format csv --output results/
-```
-
----
-
-## Dashboard
-
-The Aperture dashboard shows:
-
-- **Visibility Score** — How often your brand appears vs. competitors per query
-- **Citation Analysis** — Where AI models source their recommendations from
-- **Language Gaps** — Which markets/languages your brand is invisible in
-- **Trend Tracking** — Visibility changes over time across models
-- **Competitor Matrix** — Side-by-side comparison of who gets recommended
+- The **Dashboard** shows your overall mention rate and trends over time
+- Each audit run shows which queries mentioned your brand and which didn't
+- Competitor mention counts help you understand who AI recommends instead
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────┐     ┌──────────────┐     ┌─────────────┐
-│  Query       │────▶│  LLM Router  │────▶│  Response    │
-│  Engine      │     │  (BYOK)      │     │  Parser      │
-└─────────────┘     └──────────────┘     └──────┬──────┘
-                                                │
-                    ┌──────────────┐     ┌──────▼──────┐
-                    │  Dashboard   │◀────│  Brand      │
-                    │  (Web UI)    │     │  Matcher    │
-                    └──────────────┘     └─────────────┘
+aperture/
+├── backend/                 # Python FastAPI backend
+│   ├── app/
+│   │   ├── main.py          # FastAPI app entry point
+│   │   ├── database.py      # SQLAlchemy setup
+│   │   ├── models.py        # Database models
+│   │   ├── schemas.py       # Pydantic schemas
+│   │   ├── routers/         # API route handlers
+│   │   │   ├── brands.py
+│   │   │   ├── queries.py
+│   │   │   ├── audits.py
+│   │   │   ├── results.py
+│   │   │   └── settings.py
+│   │   └── services/        # Business logic
+│   │       ├── llm/         # LLM provider integrations
+│   │       │   ├── openai_service.py
+│   │       │   └── perplexity_service.py
+│   │       ├── analysis.py  # Brand mention detection
+│   │       └── audit_service.py
+│   ├── tests/               # pytest test suite
+│   ├── requirements.txt
+│   └── Dockerfile
+├── frontend/                # React + TypeScript frontend
+│   ├── src/
+│   │   ├── App.tsx
+│   │   ├── api/             # API client
+│   │   ├── components/      # Reusable UI components
+│   │   ├── pages/           # Page components
+│   │   └── types/           # TypeScript types
+│   ├── package.json
+│   └── Dockerfile
+└── docker-compose.yml
 ```
 
-- **Query Engine** — Expands audit queries across languages and platforms
-- **LLM Router** — Sends queries to configured providers using your API keys
-- **Response Parser** — Extracts structured data from AI responses
-- **Brand Matcher** — Detects brand mentions, aliases, and contextual references
-- **Dashboard** — Web UI for visualization and reporting
+### Data Model
+
+| Entity | Description |
+|--------|-------------|
+| **Brand** | A brand to monitor (yours or a competitor) |
+| **Competitor** | Competitor linked to a brand for tracking |
+| **Query** | A question sent to AI engines |
+| **AuditRun** | A batch execution of queries against one LLM provider |
+| **AuditResult** | Per-query result from an audit run |
+| **Setting** | Key-value configuration (API keys, etc.) |
+
+### Analysis Engine
+
+Aperture uses case-insensitive regex matching to detect brand mentions in LLM responses:
+
+1. Each LLM response is scanned for the brand name
+2. Competitor names are also scanned to track citation rates
+3. Mention counts and citation sources are stored per result
+4. Aggregated mention rate = (queries with brand mentioned / total queries) × 100
 
 ---
 
@@ -121,21 +130,74 @@ The Aperture dashboard shows:
 
 ### Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `OPENAI_API_KEY` | No | OpenAI API key for ChatGPT queries |
-| `PERPLEXITY_API_KEY` | No | Perplexity API key |
-| `ANTHROPIC_API_KEY` | No | Anthropic API key for Claude queries |
-| `GOOGLE_API_KEY` | No | Google API key for Gemini queries |
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `AUDIT_SCHEDULE` | No | Cron expression for scheduled audits (default: weekly) |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DATABASE_URL` | `sqlite:///./aperture.db` | Database connection string |
 
-At least one LLM API key is required.
+### Supported Providers
+
+| Provider | Status | Models |
+|----------|--------|--------|
+| OpenAI | ✅ | gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo |
+| Perplexity | ✅ | sonar-small, sonar-large, sonar-huge |
+| Anthropic | 🟡 Planned | claude-3-5-sonnet, claude-3-haiku |
+| Google | 🟡 Planned | gemini-1.5-pro, gemini-1.5-flash |
+
+### Custom OpenAI-Compatible Endpoints
+
+For Ollama, vLLM, or other OpenAI-compatible APIs, set the **Base URL** in Settings to your endpoint, e.g.:
+- Ollama: `http://localhost:11434/v1`
+- vLLM: `http://your-server:8080/v1`
+
+Then use your custom model name in audit runs.
+
+---
+
+## Development
+
+### Backend
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+API docs available at http://localhost:8000/docs
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+UI available at http://localhost:5173
+
+### Tests
+
+```bash
+cd backend
+pytest tests/ -v
+```
 
 ---
 
 ## Roadmap
 
+- [ ] Google AI Overviews tracking
+- [ ] Claude (Anthropic) integration
+- [ ] Gemini integration
+- [ ] Sentiment analysis on brand mentions
+- [ ] Scheduled audit runs (cron)
+- [ ] Email/webhook notifications
+- [ ] Export to CSV/JSON
+- [ ] Multi-language query support improvements
+- [ ] Bulk query import
+- [ ] Competitive share-of-voice charts
 - [ ] Core audit engine
 - [ ] BYOK multi-provider support
 - [ ] Brand mention detection

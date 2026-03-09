@@ -1,102 +1,74 @@
 # Contributing to Aperture
 
-Thanks for your interest in contributing.
+Thank you for your interest in contributing! Aperture is open source and welcomes contributions of all kinds.
 
-This guide is intentionally lightweight. If anything is unclear, open an issue and we can improve it together.
+## How to Contribute
 
-## Ways to contribute
+### Reporting Bugs
 
-- Report bugs
-- Suggest features
-- Improve docs
-- Submit code changes
-
-## Opening issues
-
-Please search existing issues first to avoid duplicates.
-
-### Bug reports
-
-Include:
-
-- What happened
-- What you expected to happen
+Please open a GitHub issue with:
+- A clear description of the problem
 - Steps to reproduce
-- Environment details (OS, browser, Docker version, relevant package versions)
-- Logs or screenshots when useful
+- Expected vs actual behavior
+- Your environment (OS, Docker version, browser)
 
-### Feature requests
+### Suggesting Features
 
-Include:
+Open a GitHub issue with the `enhancement` label. Describe:
+- The use case you're trying to solve
+- Your proposed solution
+- Any alternatives you've considered
 
-- Problem to solve
-- Proposed solution
-- Alternatives considered
-- Any constraints (performance, security, compatibility)
+### Submitting Pull Requests
 
-## Local setup
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature-name`
+3. Make your changes following the guidelines below
+4. Run tests: `cd backend && pytest tests/ -v`
+5. Build the frontend: `cd frontend && npm run build`
+6. Open a pull request with a clear description of your changes
 
-Use the setup steps in [DOCS.md](DOCS.md) as the source of truth.
+## Development Setup
 
-At a high level:
+See [DOCS.md](DOCS.md) for full setup instructions.
 
-- Frontend: Next.js
-- Backend: Python
-- Database: PostgreSQL
-- Local runtime: Docker Compose
-
-## Coding standards (minimal)
-
-### General
-
-- Keep changes focused and small
-- Prefer clear names over clever code
-- Update docs when behavior changes
-- Avoid unrelated refactors in the same PR
-
-### Frontend (Next.js)
-
-- Follow existing project structure and naming
-- Keep components and hooks small and readable
-- Run lint/type checks before opening a PR (if configured)
+## Code Style
 
 ### Backend (Python)
 
-- Follow PEP 8 style
-- Prefer type hints for new or changed public functions
-- Keep modules cohesive and easy to test
+- Follow PEP 8
+- Use type hints throughout
+- Write docstrings for public functions
+- Keep functions small and focused
+- Add tests for new functionality in `backend/tests/`
 
-### Database (PostgreSQL)
+### Frontend (TypeScript/React)
 
-- Make schema changes through migrations
-- Include safe defaults for backward compatibility when possible
-- Document data-impacting changes in the PR description
+- Use TypeScript strict mode
+- Functional components with hooks (no class components)
+- Keep components focused — split large components
+- Use Tailwind CSS for styling
+- No inline styles
 
-## Pull request process
+## Adding a New LLM Provider
 
-1. Fork the repo and create a feature branch
-2. Make your changes
-3. Run relevant checks/tests locally
-4. Open a pull request with a clear description
+1. Create `backend/app/services/llm/<provider>_service.py`
+2. Implement an async function that returns `LLMResponse`
+3. Add the provider to `audit_service.py`'s `_call_provider` function
+4. Add the provider to `SUPPORTED_PROVIDERS` in `audits.py`
+5. Add the UI for the provider in the frontend `Audits.tsx` and `Settings.tsx`
+6. Add tests
 
-### PR checklist
+## Commit Messages
 
-- Explain the problem and solution
-- Link related issue(s)
-- Note testing performed
-- Add screenshots for UI changes
-- Update docs when needed
+Use conventional commits:
+- `feat:` — new feature
+- `fix:` — bug fix
+- `docs:` — documentation changes
+- `test:` — adding or fixing tests
+- `refactor:` — code refactoring
+- `chore:` — maintenance tasks
 
-### Review and merge
+## License
 
-- One approval is required before merge
-- Keep commit message format flexible (no strict convention required)
-- Maintainers may request follow-up changes before merging
-
-## Scope and expectations
-
-- Large changes should start with an issue or discussion first
-- Breaking changes should include migration notes
-- Be respectful and collaborative in review discussions
-
-Thanks again for helping improve Aperture.
+By contributing, you agree that your contributions will be licensed under the MIT License.
