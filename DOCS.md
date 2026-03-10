@@ -157,6 +157,8 @@ Then use your custom model name in audit runs.
 
 ### Backend
 
+**Python:** 3.10–3.13. If you hit `Failed building wheel for pydantic-core` on 3.13, use 3.11 or 3.12 for the venv (e.g. `pyenv install 3.12 && pyenv local 3.12`), or upgrade to the latest `requirements.txt` which uses Pydantic 2.10+ with 3.13-compatible wheels.
+
 ```bash
 cd backend
 python -m venv .venv

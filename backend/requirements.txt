@@ -2,8 +2,9 @@ fastapi==0.111.0
 uvicorn[standard]==0.30.1
 sqlalchemy==2.0.30
 alembic==1.13.1
-pydantic==2.7.1
-pydantic-settings==2.3.0
+# Pydantic 2.10+ pulls pydantic-core with Python 3.13 wheels (2.7.x requires building from source on 3.13)
+pydantic>=2.10.0,<3
+pydantic-settings>=2.6.0,<3
 httpx==0.27.0
 openai==1.30.5
 python-multipart==0.0.9
