@@ -1,0 +1,21 @@
+---
+description: Aperture project context, stack, and code conventions
+alwaysApply: true
+---
+
+# Aperture — Project Rules
+
+**What it is:** Open-source AI visibility infrastructure. Tracks how brands appear in ChatGPT, Perplexity, and other LLM-powered search. Self-hosted, BYOK. FastAPI backend + React/TypeScript frontend.
+
+**Layout:**
+- `backend/app/` — FastAPI app: `main.py`, `database.py`, `models.py`, `schemas.py`, `routers/`, `services/` (including `services/llm/` for providers)
+- `backend/tests/` — pytest; add tests here for new backend functionality
+- `frontend/src/` — React app: `App.tsx`, `api/`, `components/`, `pages/`, `types/`
+
+**Backend (Python):** PEP 8, type hints throughout, docstrings for public functions. Small, focused functions. New LLM provider: add `backend/app/services/llm/<provider>_service.py`, wire in `audit_service.py` and `routers/audits.py`, then frontend in `Audits.tsx` and `Settings.tsx`.
+
+**Frontend (TypeScript/React):** Strict mode, functional components + hooks only, Tailwind for styling, no inline styles. Keep components focused.
+
+**Commits:** Conventional — `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`.
+
+**Run:** `docker compose up -d` (UI :3000, API :8000). Dev: backend `uvicorn app.main:app --reload`, frontend `npm run dev`. Tests: `cd backend && pytest tests/ -v`. Build check: `cd frontend && npm run build`.
