@@ -18,4 +18,4 @@ alwaysApply: true
 
 **Commits:** Conventional — `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`.
 
-**Run:** `docker compose up -d` (UI :3000, API :8000). Dev: backend `uvicorn app.main:app --reload`, frontend `npm run dev`. Tests: `cd backend && pytest tests/ -v`. Build check: `cd frontend && npm run build`.
+**Run:** `docker compose up -d` (UI :3000, API :8000). Dev: backend `uvicorn app.main:app --reload`, frontend `pnpm run dev`. Tests: `cd backend && pytest tests/ -v`. Build check: `cd frontend && pnpm run build`.

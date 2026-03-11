@@ -173,8 +173,8 @@ API docs available at http://localhost:8000/docs
 
 ```bash
 cd frontend
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 UI available at http://localhost:5173

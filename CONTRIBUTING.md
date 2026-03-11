@@ -25,7 +25,7 @@ Open a GitHub issue with the `enhancement` label. Describe:
 2. Create a feature branch: `git checkout -b feature/your-feature-name`
 3. Make your changes following the guidelines below
 4. Run tests: `cd backend && pytest tests/ -v`
-5. Build the frontend: `cd frontend && npm run build`
+5. Build the frontend: `cd frontend && pnpm run build`
 6. Open a pull request with a clear description of your changes
 
 ## Development Setup
