@@ -23,9 +23,9 @@
 
 - **Full stack:** `docker compose up -d` → UI http://localhost:3000, API http://localhost:8000
 - **Backend dev:** `cd backend && pip install -r requirements.txt && uvicorn app.main:app --reload`
-- **Frontend dev:** `cd frontend && npm install && npm run dev`
+- **Frontend dev:** `cd frontend && pnpm install && pnpm run dev`
 - **Backend tests:** `cd backend && pytest tests/ -v`
-- **Frontend build:** `cd frontend && npm run build`
+- **Frontend build:** `cd frontend && pnpm run build`
 
 ## Conventions
 
