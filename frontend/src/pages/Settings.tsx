@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getSettings, upsertSetting } from '../api'
 import Card from '../components/Card'
+import { useToast } from '../hooks/useToast'
 import { Save, Eye, EyeOff } from 'lucide-react'
 
 const SETTING_DEFS = [
@@ -32,6 +33,7 @@ const SETTING_DEFS = [
 ]
 
 export default function Settings() {
+  const { pushToast } = useToast()
   const [settings, setSettings] = useState<Record<string, string>>({})
   const [drafts, setDrafts] = useState<Record<string, string>>({})
   const [visible, setVisible] = useState<Record<string, boolean>>({})
@@ -43,19 +45,26 @@ export default function Settings() {
       const map: Record<string, string> = {}
       rows.forEach(r => { if (r.value) map[r.key] = r.value })
       setSettings(map)
-    })
+    }).catch(() => {})
   }, [])
 
   const handleSave = async (key: string) => {
     const value = drafts[key] ?? ''
     if (!value.trim()) return
     setSaving(s => ({ ...s, [key]: true }))
-    await upsertSetting(key, value)
-    setSettings(s => ({ ...s, [key]: value }))
-    setDrafts(d => { const n = { ...d }; delete n[key]; return n })
-    setSaving(s => ({ ...s, [key]: false }))
-    setSaved(s => ({ ...s, [key]: true }))
-    setTimeout(() => setSaved(s => ({ ...s, [key]: false })), 2000)
+    try {
+      const updated = await upsertSetting(key, value)
+      // Backend returns the masked value for secrets — use it as saved state.
+      setSettings(s => ({ ...s, [key]: updated.value ?? value }))
+      setDrafts(d => { const n = { ...d }; delete n[key]; return n })
+      setSaved(s => ({ ...s, [key]: true }))
+      pushToast('Saved', 'success')
+      setTimeout(() => setSaved(s => ({ ...s, [key]: false })), 2000)
+    } catch {
+      /* draft is preserved; interceptor already toasted the error */
+    } finally {
+      setSaving(s => ({ ...s, [key]: false }))
+    }
   }
 
   return (

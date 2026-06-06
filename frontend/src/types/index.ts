@@ -4,6 +4,7 @@ export interface Brand {
   domain?: string
   description?: string
   is_own_brand: boolean
+  aliases: string[]
   created_at: string
   competitors: Competitor[]
 }
@@ -13,6 +14,7 @@ export interface Competitor {
   brand_id: number
   name: string
   domain?: string
+  aliases: string[]
   created_at: string
 }
 
@@ -50,7 +52,10 @@ export interface AuditRun {
   status: 'pending' | 'running' | 'completed' | 'failed'
   total_queries: number
   completed_queries: number
+  success_count: number
+  error_count: number
   mention_rate?: number
+  error?: string
   created_at: string
   completed_at?: string
   results: AuditResult[]
@@ -75,4 +80,11 @@ export interface TrendPoint {
   provider: string
   model: string
   audit_run_id: number
+}
+
+export interface ProviderInfo {
+  id: string
+  label: string
+  models: string[]
+  default_model: string
 }
