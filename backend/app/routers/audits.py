@@ -7,10 +7,9 @@ from app.database import get_db
 from app.models import AuditResult, AuditRun, Brand, Query
 from app.schemas import AuditRunOut, AuditRunRequest
 from app.services.audit_service import run_audit
+from app.services.llm.providers import supported_providers
 
 router = APIRouter()
-
-SUPPORTED_PROVIDERS = {"openai", "perplexity"}
 
 
 @router.get("/", response_model=list[AuditRunOut])
@@ -27,7 +26,7 @@ def create_audit(
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
-    if payload.provider not in SUPPORTED_PROVIDERS:
+    if payload.provider not in supported_providers():
         raise HTTPException(status_code=400, detail=f"Unsupported provider: {payload.provider}")
 
     brand = db.query(Brand).filter(Brand.id == payload.brand_id).first()

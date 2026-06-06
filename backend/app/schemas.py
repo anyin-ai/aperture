@@ -106,7 +106,10 @@ class AuditRunOut(BaseModel):
     status: str
     total_queries: int
     completed_queries: int
+    success_count: int = 0
+    error_count: int = 0
     mention_rate: Optional[float] = None
+    error: Optional[str] = None
     created_at: datetime
     completed_at: Optional[datetime] = None
     results: list[AuditResultOut] = []

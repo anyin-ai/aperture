@@ -1,0 +1,18 @@
+# Keep the host build context out of the image so `COPY . .` cannot clobber the
+# container's freshly-installed node_modules with host-platform binaries.
+node_modules
+dist
+build
+.vite
+*.tsbuildinfo
+.git
+.gitignore
+Dockerfile
+.dockerignore
+npm-debug.log*
+pnpm-debug.log*
+.DS_Store
+*.local
+.env
+.env.*
+coverage

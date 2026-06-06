@@ -67,11 +67,24 @@ class AuditRun(Base):
     total_queries: Mapped[int] = mapped_column(Integer, default=0)
     completed_queries: Mapped[int] = mapped_column(Integer, default=0)
     mention_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    # Run-level error, set when the whole run fails (e.g. brand deleted mid-run,
+    # an unexpected exception). NULL for healthy runs. Mirrors AuditResult.error.
+    error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     brand: Mapped["Brand"] = relationship("Brand")
     results: Mapped[list["AuditResult"]] = relationship("AuditResult", back_populates="audit_run", cascade="all, delete-orphan")
+
+    @property
+    def success_count(self) -> int:
+        """Number of result rows that completed without a provider error."""
+        return sum(1 for r in self.results if r.error is None)
+
+    @property
+    def error_count(self) -> int:
+        """Number of result rows that errored (bad key, stale model, network)."""
+        return sum(1 for r in self.results if r.error is not None)
 
 
 class AuditResult(Base):
@@ -93,6 +106,16 @@ class AuditResult(Base):
 
     audit_run: Mapped["AuditRun"] = relationship("AuditRun", back_populates="results")
     query: Mapped["Query"] = relationship("Query", back_populates="results")
+
+    @property
+    def query_text(self) -> Optional[str]:
+        """The underlying question text, read via from_attributes on serialize.
+
+        Lets AuditResultOut.query_text populate everywhere (including nested
+        under AuditRunOut.results on the polled audits path), not just in the
+        standalone /results/ endpoint.
+        """
+        return self.query.text if self.query else None
 
 
 class Setting(Base):
