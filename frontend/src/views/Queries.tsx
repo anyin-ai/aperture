@@ -1,5 +1,7 @@
+'use client'
+
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import { getBrands, getQueries, createQuery, updateQuery, deleteQuery } from '../api'
 import type { Brand, Query } from '../types'
 import Card from '../components/Card'
@@ -117,7 +119,7 @@ export default function Queries() {
       {brands.length === 0 && !loading && (
         <Card className="p-8 text-center text-gray-400 text-sm mb-6">
           You need a brand first —{' '}
-          <Link to="/brands" className="text-indigo-600 hover:underline font-medium">add a brand</Link>.
+          <Link href="/brands" className="text-indigo-600 hover:underline font-medium">add a brand</Link>.
         </Card>
       )}
 

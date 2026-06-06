@@ -92,13 +92,15 @@ aperture/
 │   ├── tests/               # pytest test suite
 │   ├── requirements.txt
 │   └── Dockerfile
-├── frontend/                # React + TypeScript frontend
+├── frontend/                # Next.js (App Router) + TypeScript frontend
 │   ├── src/
-│   │   ├── App.tsx
-│   │   ├── api/             # API client
+│   │   ├── app/             # Routes, root layout, and /api/* -> backend proxy
+│   │   ├── views/           # Page components rendered by the routes
+│   │   ├── api/             # Axios API client
 │   │   ├── components/      # Reusable UI components
-│   │   ├── pages/           # Page components
+│   │   ├── hooks/           # useToast (error/toast layer)
 │   │   └── types/           # TypeScript types
+│   ├── next.config.ts
 │   ├── package.json
 │   └── Dockerfile
 └── docker-compose.yml
@@ -130,9 +132,11 @@ Aperture uses case-insensitive regex matching to detect brand mentions in LLM re
 
 ### Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DATABASE_URL` | `sqlite:///./aperture.db` | Database connection string |
+| Variable | Default | Description | Service |
+|----------|---------|-------------|---------|
+| `DATABASE_URL` | `sqlite:///./aperture.db` | Database connection string | backend |
+| `CORS_ALLOW_ORIGINS` | `http://localhost:3000,http://localhost:5173` | Comma-separated allowed CORS origins | backend |
+| `BACKEND_URL` | `http://localhost:8000` | Backend the frontend proxies `/api/*` to | frontend |
 
 ### Supported Providers
 
@@ -162,7 +166,7 @@ Aperture is built for single-tenant self-hosting. Be aware of the MVP security p
 - **API keys are stored unencrypted (plaintext)** in the SQLite database. Anyone with file or shell access to the host can read them. Encryption-at-rest is planned.
 - **There is no built-in authentication.** Every visitor to the UI/API has full access.
 - **Do not expose the instance to the public internet.** Keep it on `localhost` / a private network, or front it with a reverse proxy that enforces auth.
-- **CORS** defaults to `http://localhost:3000` and `http://localhost:5173`. Override with the `CORS_ALLOW_ORIGINS` env var (comma-separated). In the Docker topology nginx proxies the API same-origin, so CORS is not exercised there.
+- **CORS** defaults to `http://localhost:3000` and `http://localhost:5173`. Override with the `CORS_ALLOW_ORIGINS` env var (comma-separated). The Next.js frontend proxies `/api/*` to the backend server-side (see `BACKEND_URL`), so browser requests are same-origin and CORS is not normally exercised.
 - Audit data and keys are only ever transmitted to the AI provider you query — nowhere else.
 
 ## Database & Upgrades
@@ -204,7 +208,7 @@ pnpm install
 pnpm run dev
 ```
 
-UI available at http://localhost:5173
+UI available at http://localhost:3000 (Next.js dev server). It proxies `/api/*` to the backend at `BACKEND_URL` (default `http://localhost:8000`), so run the backend alongside it.
 
 ### Tests
 

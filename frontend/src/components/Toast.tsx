@@ -1,3 +1,5 @@
+'use client'
+
 import { X } from 'lucide-react'
 import { useToast } from '../hooks/useToast'
 import type { ToastType } from '../hooks/useToast'

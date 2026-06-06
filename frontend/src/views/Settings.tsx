@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useState } from 'react'
 import { getSettings, upsertSetting } from '../api'
 import Card from '../components/Card'

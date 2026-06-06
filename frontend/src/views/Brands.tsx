@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useState } from 'react'
 import { getBrands, createBrand, updateBrand, deleteBrand, addCompetitor, deleteCompetitor } from '../api'
 import type { Brand } from '../types'

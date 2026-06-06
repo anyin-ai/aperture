@@ -1,5 +1,7 @@
+'use client'
+
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import { getBrands, getQueries, getAudits, createAudit, getAudit, deleteAudit, getProviders } from '../api'
 import type { Brand, Query, AuditRun, AuditResult, ProviderInfo } from '../types'
 import Card from '../components/Card'
@@ -155,7 +157,7 @@ export default function Audits() {
           {brands.length === 0 ? (
             <p className="text-sm text-gray-500">
               No brands yet —{' '}
-              <Link to="/brands" className="text-indigo-600 hover:underline font-medium">add a brand first</Link>.
+              <Link href="/brands" className="text-indigo-600 hover:underline font-medium">add a brand first</Link>.
             </p>
           ) : (
             <>
@@ -202,7 +204,7 @@ export default function Audits() {
                 {queries.length === 0 ? (
                   <p className="text-xs text-gray-400">
                     No queries for this brand yet —{' '}
-                    <Link to="/queries" className="text-indigo-600 hover:underline">add some</Link>.
+                    <Link href="/queries" className="text-indigo-600 hover:underline">add some</Link>.
                   </p>
                 ) : (
                   <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-56 overflow-y-auto">

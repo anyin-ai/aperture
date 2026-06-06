@@ -37,6 +37,11 @@ frontend/coverage/
 frontend/tsconfig.tsbuildinfo
 *.tsbuildinfo
 
+# Next.js
+frontend/.next/
+frontend/out/
+next-env.d.ts
+
 # IDE
 .vscode/
 .idea/

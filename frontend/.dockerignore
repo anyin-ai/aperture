@@ -1,6 +1,8 @@
 # Keep the host build context out of the image so `COPY . .` cannot clobber the
 # container's freshly-installed node_modules with host-platform binaries.
 node_modules
+.next
+out
 dist
 build
 .vite

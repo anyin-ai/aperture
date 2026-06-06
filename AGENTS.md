@@ -7,7 +7,7 @@
 | Layer   | Tech |
 |--------|------|
 | Backend | Python 3.12, FastAPI, SQLAlchemy, Pydantic |
-| Frontend | TypeScript, React, Vite, Tailwind CSS |
+| Frontend | TypeScript, React, Next.js (App Router), Tailwind CSS |
 | Run     | Docker Compose (optional); can run backend/frontend locally |
 
 ## Where to Look
@@ -17,7 +17,7 @@
 - **API routes:** `backend/app/routers/` (brands, queries, audits, results, settings)
 - **Business logic:** `backend/app/services/` — `audit_service.py`, `analysis.py`, `services/llm/*.py` for each provider
 - **Tests:** `backend/tests/` (pytest)
-- **Frontend:** `frontend/src/` — `App.tsx`, `pages/`, `components/`, `api/`, `types/`
+- **Frontend:** `frontend/src/` — `app/` (Next.js App Router routes + layout + `/api` proxy), `views/` (page components), `components/`, `hooks/`, `api/`, `types/`
 
 ## Run & Test
 

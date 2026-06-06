@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useState } from 'react'
 import { getDashboard, getTrends, getBrands } from '../api'
 import type { DashboardStats, Brand, TrendPoint } from '../types'
