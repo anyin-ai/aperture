@@ -19,8 +19,8 @@ PROVIDERS: dict[str, dict] = {
     },
     "perplexity": {
         "label": "Perplexity",
-        # The old llama-3.1-sonar-* family was retired in early 2025; the
-        # current online-search models are `sonar` and `sonar-pro`.
+        # The previous online-search model family was retired in early 2025;
+        # the current models are `sonar` and `sonar-pro`.
         "models": ["sonar", "sonar-pro"],
         "default_model": "sonar",
     },

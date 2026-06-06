@@ -7,7 +7,7 @@ from app.database import get_db
 from app.models import AuditResult, AuditRun, Brand, Query
 from app.schemas import AuditRunOut, AuditRunRequest
 from app.services.audit_service import run_audit
-from app.services.llm.providers import supported_providers
+from app.services.llm.providers import supported_providers, validate_provider_model
 
 router = APIRouter()
 
@@ -28,6 +28,12 @@ def create_audit(
 ):
     if payload.provider not in supported_providers():
         raise HTTPException(status_code=400, detail=f"Unsupported provider: {payload.provider}")
+
+    # Reject a wrong/stale model up front with a clear 400 listing valid models,
+    # instead of letting it surface as a late per-query provider error.
+    model_error = validate_provider_model(payload.provider, payload.model)
+    if model_error:
+        raise HTTPException(status_code=400, detail=model_error)
 
     brand = db.query(Brand).filter(Brand.id == payload.brand_id).first()
     if not brand:

@@ -1,14 +1,28 @@
+import json
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 # ── Brand ──────────────────────────────────────────────────────────────────────
 
+def _decode_aliases(v):
+    """Accept the ORM's JSON-string aliases (or None) and yield a list."""
+    if v is None:
+        return []
+    if isinstance(v, str):
+        try:
+            return json.loads(v)
+        except (ValueError, TypeError):
+            return []
+    return v
+
+
 class CompetitorBase(BaseModel):
     name: str
     domain: Optional[str] = None
+    aliases: list[str] = []
 
 
 class CompetitorCreate(CompetitorBase):
@@ -22,12 +36,15 @@ class CompetitorOut(CompetitorBase):
 
     model_config = {"from_attributes": True}
 
+    _decode_aliases = field_validator("aliases", mode="before")(_decode_aliases)
+
 
 class BrandBase(BaseModel):
     name: str
     domain: Optional[str] = None
     description: Optional[str] = None
     is_own_brand: bool = True
+    aliases: list[str] = []
 
 
 class BrandCreate(BrandBase):
@@ -44,6 +61,8 @@ class BrandOut(BrandBase):
     competitors: list[CompetitorOut] = []
 
     model_config = {"from_attributes": True}
+
+    _decode_aliases = field_validator("aliases", mode="before")(_decode_aliases)
 
 
 # ── Query ──────────────────────────────────────────────────────────────────────
@@ -75,8 +94,8 @@ class QueryOut(QueryBase):
 class AuditRunRequest(BaseModel):
     brand_id: int
     query_ids: list[int]
-    provider: str  # openai, perplexity
-    model: str
+    provider: str  # validated against the providers catalog in the router (clear 400)
+    model: str  # validated against the provider's models in the router (clear 400)
 
 
 class AuditResultOut(BaseModel):
@@ -130,6 +149,15 @@ class SettingOut(BaseModel):
 class SettingUpsert(BaseModel):
     key: str
     value: Optional[str] = None
+
+
+# ── Providers ─────────────────────────────────────────────────────────────────
+
+class ProviderOut(BaseModel):
+    id: str
+    label: str
+    models: list[str]
+    default_model: str
 
 
 # ── Dashboard ─────────────────────────────────────────────────────────────────

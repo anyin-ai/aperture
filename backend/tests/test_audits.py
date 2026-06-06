@@ -1,6 +1,6 @@
 """Tests for audit run creation (without actual LLM calls)."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 
 def _make_brand_with_query(client):
@@ -20,17 +20,21 @@ def _make_brand_with_query(client):
 
 def test_create_audit_returns_pending(client):
     brand_id, query_id = _make_brand_with_query(client)
-    resp = client.post("/api/audits/", json={
-        "brand_id": brand_id,
-        "query_ids": [query_id],
-        "provider": "openai",
-        "model": "gpt-4o-mini",
-    })
+    # Stub the background runner so creation never touches the network or the
+    # real DB — run_audit execution is covered offline in test_audit_lifecycle.
+    with patch("app.routers.audits._run_audit_bg") as bg:
+        resp = client.post("/api/audits/", json={
+            "brand_id": brand_id,
+            "query_ids": [query_id],
+            "provider": "openai",
+            "model": "gpt-4o-mini",
+        })
     assert resp.status_code == 201
     data = resp.json()
     assert data["status"] in ("pending", "running", "completed")
     assert data["total_queries"] == 1
     assert data["brand_id"] == brand_id
+    bg.assert_called_once()
 
 
 def test_create_audit_unsupported_provider(client):
@@ -42,6 +46,18 @@ def test_create_audit_unsupported_provider(client):
         "model": "some-model",
     })
     assert resp.status_code == 400
+
+
+def test_create_audit_invalid_model(client):
+    brand_id, query_id = _make_brand_with_query(client)
+    resp = client.post("/api/audits/", json={
+        "brand_id": brand_id,
+        "query_ids": [query_id],
+        "provider": "perplexity",
+        "model": "llama-3.1-sonar-small-128k-online",  # retired model
+    })
+    assert resp.status_code == 400
+    assert "sonar" in resp.json()["detail"]
 
 
 def test_create_audit_invalid_brand(client):

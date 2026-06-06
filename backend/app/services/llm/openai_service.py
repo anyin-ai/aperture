@@ -5,7 +5,13 @@ from typing import Optional
 
 import httpx
 
-from app.services.llm import LLMResponse
+from app.services.llm import (
+    DEFAULT_MAX_TOKENS,
+    DEFAULT_TEMPERATURE,
+    LLMResponse,
+    extract_chat_content,
+)
+from app.services.llm.retry import post_with_retries
 
 OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions"
 
@@ -32,12 +38,15 @@ async def query_openai(
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt},
         ],
+        # Pinned for reproducible, cost-bounded audits (see app.services.llm).
+        "temperature": DEFAULT_TEMPERATURE,
+        "max_tokens": DEFAULT_MAX_TOKENS,
     }
 
     start = time.monotonic()
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(url, json=payload, headers=headers)
+            resp = await post_with_retries(client, url, json=payload, headers=headers)
             resp.raise_for_status()
             data = resp.json()
     except Exception as exc:
@@ -45,5 +54,10 @@ async def query_openai(
         return LLMResponse(text="", model=model, sources=[], latency_ms=latency_ms, error=str(exc))
 
     latency_ms = int((time.monotonic() - start) * 1000)
-    text = data["choices"][0]["message"]["content"]
-    return LLMResponse(text=text, model=model, sources=[], latency_ms=latency_ms)
+    content = extract_chat_content(data)
+    if content is None:
+        return LLMResponse(
+            text="", model=model, sources=[], latency_ms=latency_ms,
+            error="Unexpected OpenAI response shape",
+        )
+    return LLMResponse(text=content, model=model, sources=[], latency_ms=latency_ms)

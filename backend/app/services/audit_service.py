@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 
 from app.models import AuditRun, Brand, Setting
 from app.services.analysis import (
-    count_brand_mentions,
-    find_competitor_mentions,
+    count_name_with_aliases,
+    find_competitor_mentions_with_aliases,
     serialize_competitor_mentions,
     serialize_sources,
 )
@@ -72,7 +72,7 @@ async def run_audit(
         _fail_run(db, run, "Brand not found")
         return
 
-    competitor_names = [c.name for c in brand.competitors]
+    competitors_with_aliases = [(c.name, c.alias_list) for c in brand.competitors]
 
     try:
         run.status = "running"
@@ -88,8 +88,10 @@ async def run_audit(
 
             llm_resp = await _call_provider(query.text, run.provider, run.model, db)
 
-            mention_count = count_brand_mentions(llm_resp.text, brand.name)
-            competitor_mentions = find_competitor_mentions(llm_resp.text, competitor_names)
+            mention_count = count_name_with_aliases(llm_resp.text, brand.name, brand.alias_list)
+            competitor_mentions = find_competitor_mentions_with_aliases(
+                llm_resp.text, competitors_with_aliases
+            )
 
             result_row.response_text = llm_resp.text
             result_row.brand_mentioned = mention_count > 0

@@ -51,3 +51,36 @@ def test_add_competitor(client):
     resp = client.post(f"/api/brands/{brand_id}/competitors", json={"name": "Competitor X"})
     assert resp.status_code == 201
     assert resp.json()["name"] == "Competitor X"
+
+
+def test_brand_and_competitor_aliases_roundtrip(client):
+    resp = client.post("/api/brands/", json={
+        "name": "OpenAI",
+        "is_own_brand": True,
+        "aliases": ["Open AI", "ChatGPT"],
+        "competitors": [{"name": "Anthropic", "aliases": ["Claude"]}],
+    })
+    assert resp.status_code == 201
+    data = resp.json()
+    assert data["aliases"] == ["Open AI", "ChatGPT"]
+    assert data["competitors"][0]["aliases"] == ["Claude"]
+
+    # Round-trips on a subsequent GET.
+    got = client.get(f"/api/brands/{data['id']}").json()
+    assert got["aliases"] == ["Open AI", "ChatGPT"]
+
+
+def test_brand_without_aliases_returns_empty_list(client):
+    resp = client.post("/api/brands/", json={"name": "NoAlias", "is_own_brand": True})
+    assert resp.status_code == 201
+    assert resp.json()["aliases"] == []
+
+
+def test_update_brand_aliases(client):
+    resp = client.post("/api/brands/", json={"name": "Acme", "is_own_brand": True})
+    brand_id = resp.json()["id"]
+    resp = client.put(f"/api/brands/{brand_id}", json={
+        "name": "Acme", "is_own_brand": True, "aliases": ["ACME Inc"],
+    })
+    assert resp.status_code == 200
+    assert resp.json()["aliases"] == ["ACME Inc"]

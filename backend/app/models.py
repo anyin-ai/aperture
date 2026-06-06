@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from typing import Optional
 
@@ -24,10 +25,16 @@ class Brand(Base):
     domain: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     is_own_brand: Mapped[bool] = mapped_column(Boolean, default=True)
+    aliases: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON list of name variants
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
 
     queries: Mapped[list["Query"]] = relationship("Query", back_populates="brand", cascade="all, delete-orphan")
     competitors: Mapped[list["Competitor"]] = relationship("Competitor", back_populates="brand", cascade="all, delete-orphan")
+
+    @property
+    def alias_list(self) -> list[str]:
+        """The stored alias JSON decoded to a list (empty when unset)."""
+        return json.loads(self.aliases) if self.aliases else []
 
 
 class Competitor(Base):
@@ -37,9 +44,15 @@ class Competitor(Base):
     brand_id: Mapped[int] = mapped_column(Integer, ForeignKey("brands.id"), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     domain: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    aliases: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON list of name variants
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
 
     brand: Mapped["Brand"] = relationship("Brand", back_populates="competitors")
+
+    @property
+    def alias_list(self) -> list[str]:
+        """The stored alias JSON decoded to a list (empty when unset)."""
+        return json.loads(self.aliases) if self.aliases else []
 
 
 class Query(Base):
