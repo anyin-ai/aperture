@@ -6,7 +6,7 @@
 
 | Layer   | Tech |
 |--------|------|
-| Backend | Python 3, FastAPI, SQLAlchemy, Pydantic |
+| Backend | Python 3.12, FastAPI, SQLAlchemy, Pydantic |
 | Frontend | TypeScript, React, Vite, Tailwind CSS |
 | Run     | Docker Compose (optional); can run backend/frontend locally |
 

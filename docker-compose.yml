@@ -7,6 +7,9 @@ services:
       - aperture_data:/app/data
     environment:
       - DATABASE_URL=sqlite:////app/data/aperture.db
+      # Frontend talks to the backend same-origin via nginx, so CORS is moot in
+      # this topology. Set explicit origins here if you call the API directly.
+      - CORS_ALLOW_ORIGINS=http://localhost:3000
     restart: unless-stopped
 
   frontend:

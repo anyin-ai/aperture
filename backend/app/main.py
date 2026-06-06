@@ -2,6 +2,7 @@
 Aperture – AI Visibility Monitoring Backend
 """
 
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -24,10 +25,17 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Explicit origins via env (comma-separated). Default covers the shipped nginx
+# port (3000) and the vite dev server (5173). Note: a wildcard origin ('*')
+# combined with allow_credentials=True is invalid per the CORS spec — if you
+# add cookie/Authorization auth later, set explicit origins and only then
+# enable credentials. In the Docker topology nginx proxies same-origin, so CORS
+# is moot there; this matters for the cross-origin vite dev server.
+_origins = os.getenv("CORS_ALLOW_ORIGINS", "http://localhost:3000,http://localhost:5173")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=[o.strip() for o in _origins.split(",") if o.strip()],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

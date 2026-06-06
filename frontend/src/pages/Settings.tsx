@@ -137,10 +137,17 @@ export default function Settings() {
         })}
 
         <Card className="p-5 bg-gray-50">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">🔒 Privacy Note</h3>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">🔒 Privacy &amp; Security</h3>
           <p className="text-xs text-gray-500 leading-relaxed">
-            API keys are stored in your local SQLite database and are never transmitted to any external service other than 
-            the respective AI provider you are querying. Aperture is fully self-hosted — your data stays on your server.
+            Your keys and audit data stay on your server — they are only transmitted to the AI
+            provider you query. Keys are stored <strong>unencrypted (plaintext)</strong> in the local
+            SQLite database, so anyone with file or shell access to the server can read them.
+            Encryption-at-rest is planned.
+          </p>
+          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-3 leading-relaxed">
+            ⚠️ Aperture is a single-tenant tool with <strong>no built-in authentication</strong>. Do
+            not expose this instance to the public internet — keep it on localhost / a private
+            network, or put it behind a reverse proxy with auth.
           </p>
         </Card>
       </div>
