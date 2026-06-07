@@ -50,3 +50,6 @@ frontend/tsconfig.tsbuildinfo
 # Logs
 *.log
 logs/
+
+# Claude Code (local agent-generated outputs)
+.claude/outputs/
