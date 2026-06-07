@@ -55,3 +55,6 @@ next-env.d.ts
 # Logs
 *.log
 logs/
+
+# Claude Code (local agent-generated outputs)
+.claude/outputs/
