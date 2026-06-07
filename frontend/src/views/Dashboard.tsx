@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useState } from 'react'
 import { getDashboard, getTrends, getBrands } from '../api'
 import type { DashboardStats, Brand, TrendPoint } from '../types'
@@ -38,10 +40,15 @@ export default function Dashboard() {
     }
   }, [selectedBrand])
 
+  // Pivot the long-format trend rows into wide format so same-day runs don't
+  // collapse and each provider/model renders as its own line.
+  const SERIES_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
+  const seriesKeys = Array.from(new Set(trends.map(t => `${t.provider}/${t.model}`)))
   const trendData = trends.map(t => ({
-    date: new Date(t.date).toLocaleDateString(),
-    'Mention Rate (%)': t.mention_rate,
-    provider: t.provider,
+    label: new Date(t.date).toLocaleString([], {
+      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+    }),
+    [`${t.provider}/${t.model}`]: t.mention_rate,
   }))
 
   return (
@@ -98,18 +105,23 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height={240}>
                 <LineChart data={trendData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                  <XAxis dataKey="label" tick={{ fontSize: 12 }} />
                   <YAxis domain={[0, 100]} unit="%" tick={{ fontSize: 12 }} />
-                  <Tooltip formatter={(v) => [`${v}%`, 'Mention Rate']} />
+                  <Tooltip formatter={(v, name) => [`${v}%`, name as string]} />
                   <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="Mention Rate (%)"
-                    stroke="#6366f1"
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
+                  {seriesKeys.map((key, i) => (
+                    <Line
+                      key={key}
+                      type="monotone"
+                      dataKey={key}
+                      name={key}
+                      stroke={SERIES_COLORS[i % SERIES_COLORS.length]}
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
+                      connectNulls
+                    />
+                  ))}
                 </LineChart>
               </ResponsiveContainer>
             </Card>

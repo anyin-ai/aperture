@@ -36,11 +36,13 @@ No vendor lock-in. No per-seat pricing. Your infrastructure, your data, your key
 
 Aperture doesn't ship with API keys. Bring your own:
 
-- OpenAI
-- Anthropic
-- Google (Gemini)
-- Perplexity
-- Any OpenAI-compatible endpoint (Ollama, vLLM, etc.)
+- **OpenAI** — 🟢 Supported (`gpt-4o-mini`, `gpt-4o`, `gpt-4-turbo`, `gpt-3.5-turbo`)
+- **Perplexity** — 🟢 Supported (`sonar`, `sonar-pro`)
+- **Anthropic** — 🟡 Planned
+- **Google (Gemini)** — 🟡 Planned
+- Any OpenAI-compatible endpoint (Ollama, vLLM, etc.) — set a custom Base URL in Settings
+
+The supported provider/model list is served by the backend at `GET /api/providers`, so the UI never drifts from what actually works.
 
 ---
 
@@ -75,6 +77,8 @@ How Aperture compares to commercial AI visibility tools:
 | Pricing | Free | €89/mo+ | Free tier / paid | $$$+ | Enterprise | Enterprise |
 
 **Why self-host?** Your audit queries, brand strategy, and competitive intelligence never leave your infrastructure. No vendor lock-in, no usage caps, no surprise pricing changes.
+
+> **Security note (MVP):** API keys are stored **unencrypted** in the local SQLite database, and Aperture ships with **no authentication**. Keep your instance on localhost / a private network, or put it behind a reverse proxy with auth — do not expose it to the public internet. See [DOCS.md](DOCS.md#security--self-hosting) for details.
 
 ---
 

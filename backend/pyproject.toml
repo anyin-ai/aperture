@@ -1,3 +1,10 @@
+[project]
+name = "aperture-backend"
+version = "0.1.0"
+# Pinned to match the python:3.12-slim Docker image and CI.
+requires-python = ">=3.12,<3.13"
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+asyncio_mode = "auto"

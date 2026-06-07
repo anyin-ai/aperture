@@ -1,5 +1,12 @@
 """Pytest configuration – in-memory SQLite database for tests."""
 
+import os
+
+# Force the app's own engine to be in-memory too, so the lifespan's init_db()
+# (and any background task using SessionLocal) never creates a stray
+# ./aperture.db file during the test run. Must be set before app import.
+os.environ["DATABASE_URL"] = "sqlite://"
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine

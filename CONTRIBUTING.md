@@ -53,11 +53,11 @@ See [DOCS.md](DOCS.md) for full setup instructions.
 ## Adding a New LLM Provider
 
 1. Create `backend/app/services/llm/<provider>_service.py`
-2. Implement an async function that returns `LLMResponse`
-3. Add the provider to `audit_service.py`'s `_call_provider` function
-4. Add the provider to `SUPPORTED_PROVIDERS` in `audits.py`
-5. Add the UI for the provider in the frontend `Audits.tsx` and `Settings.tsx`
-6. Add tests
+2. Implement an async function returning `LLMResponse` (reuse `post_with_retries`, `extract_chat_content`, and the reproducibility constants from `app.services.llm`)
+3. Add the provider + its models to the catalog in `backend/app/services/llm/providers.py` — this is the single source of truth; the `/api/providers` endpoint, audit-create validation, and the frontend dropdown all derive from it
+4. Wire the provider into `audit_service.py`'s `_call_provider` function
+5. Add the provider's API-key field to the frontend Settings UI (`frontend/src/views/Settings.tsx`); the model dropdown in `views/Audits.tsx` updates automatically from `/api/providers`
+6. Add tests (mock the HTTP with `httpx.MockTransport` — no real network calls)
 
 ## Commit Messages
 

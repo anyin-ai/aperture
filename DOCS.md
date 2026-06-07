@@ -30,7 +30,7 @@ The UI is available at **http://localhost:3000** and the API at **http://localho
    - **Perplexity**: Get your key from [perplexity.ai](https://www.perplexity.ai/settings/api)
 4. Click **Save** for each key
 
-Keys are stored in your local SQLite database and are never sent to any third party.
+Keys are stored **unencrypted** in your local SQLite database and are only ever sent to the AI provider you query. See [Security & Self-Hosting](#security--self-hosting) before deploying.
 
 ### 3. Set Up Your Brand
 
@@ -57,7 +57,7 @@ Keys are stored in your local SQLite database and are never sent to any third pa
 4. Select the queries to run
 5. Click **Run Audit**
 
-Aperture will send each query to the selected AI engine and analyze the response for brand mentions. Results appear in real-time.
+Aperture will send each query to the selected AI engine and analyze the response for brand mentions. The Audits view updates live by polling every ~3 seconds while a run is active, and each run always finishes in a terminal **completed** or **failed** state.
 
 ### 6. Track Results
 
@@ -92,13 +92,15 @@ aperture/
 │   ├── tests/               # pytest test suite
 │   ├── requirements.txt
 │   └── Dockerfile
-├── frontend/                # React + TypeScript frontend
+├── frontend/                # Next.js (App Router) + TypeScript frontend
 │   ├── src/
-│   │   ├── App.tsx
-│   │   ├── api/             # API client
+│   │   ├── app/             # Routes, root layout, and /api/* -> backend proxy
+│   │   ├── views/           # Page components rendered by the routes
+│   │   ├── api/             # Axios API client
 │   │   ├── components/      # Reusable UI components
-│   │   ├── pages/           # Page components
+│   │   ├── hooks/           # useToast (error/toast layer)
 │   │   └── types/           # TypeScript types
+│   ├── next.config.ts
 │   ├── package.json
 │   └── Dockerfile
 └── docker-compose.yml
@@ -130,18 +132,22 @@ Aperture uses case-insensitive regex matching to detect brand mentions in LLM re
 
 ### Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DATABASE_URL` | `sqlite:///./aperture.db` | Database connection string |
+| Variable | Default | Description | Service |
+|----------|---------|-------------|---------|
+| `DATABASE_URL` | `sqlite:///./aperture.db` | Database connection string | backend |
+| `CORS_ALLOW_ORIGINS` | `http://localhost:3000,http://localhost:5173` | Comma-separated allowed CORS origins | backend |
+| `BACKEND_URL` | `http://localhost:8000` | Backend the frontend proxies `/api/*` to | frontend |
 
 ### Supported Providers
 
+The canonical list is served by the backend at `GET /api/providers` (the UI reads it from there), so this table can't drift from what actually runs:
+
 | Provider | Status | Models |
 |----------|--------|--------|
-| OpenAI | ✅ | gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo |
-| Perplexity | ✅ | sonar-small, sonar-large, sonar-huge |
-| Anthropic | 🟡 Planned | claude-3-5-sonnet, claude-3-haiku |
-| Google | 🟡 Planned | gemini-1.5-pro, gemini-1.5-flash |
+| OpenAI | ✅ | gpt-4o-mini, gpt-4o, gpt-4-turbo, gpt-3.5-turbo |
+| Perplexity | ✅ | sonar, sonar-pro |
+| Anthropic | 🟡 Planned | — |
+| Google | 🟡 Planned | — |
 
 ### Custom OpenAI-Compatible Endpoints
 
@@ -153,11 +159,36 @@ Then use your custom model name in audit runs.
 
 ---
 
+## Security & Self-Hosting
+
+Aperture is built for single-tenant self-hosting. Be aware of the MVP security posture:
+
+- **API keys are stored unencrypted (plaintext)** in the SQLite database. Anyone with file or shell access to the host can read them. Encryption-at-rest is planned.
+- **There is no built-in authentication.** Every visitor to the UI/API has full access.
+- **Do not expose the instance to the public internet.** Keep it on `localhost` / a private network, or front it with a reverse proxy that enforces auth.
+- **CORS** defaults to `http://localhost:3000` and `http://localhost:5173`. Override with the `CORS_ALLOW_ORIGINS` env var (comma-separated). The Next.js frontend proxies `/api/*` to the backend server-side (see `BACKEND_URL`), so browser requests are same-origin and CORS is not normally exercised.
+- Audit data and keys are only ever transmitted to the AI provider you query — nowhere else.
+
+## Database & Upgrades
+
+The schema is created automatically with SQLAlchemy `create_all` on startup; **there are no migrations**. When upgrading to a version that adds or changes columns, delete the SQLite database and let it be recreated:
+
+```bash
+# local dev
+rm backend/aperture.db
+# docker (named volume)
+docker compose down -v
+```
+
+Back up first if you need to keep prior audit history.
+
+---
+
 ## Development
 
 ### Backend
 
-**Python:** 3.10–3.13. If you hit `Failed building wheel for pydantic-core` on 3.13, use 3.11 or 3.12 for the venv (e.g. `pyenv install 3.12 && pyenv local 3.12`), or upgrade to the latest `requirements.txt` which uses Pydantic 2.10+ with 3.13-compatible wheels.
+**Python:** 3.12 (matches the `python:3.12-slim` Docker image and CI). Use `pyenv local 3.12` for the venv if your system default differs.
 
 ```bash
 cd backend
@@ -177,7 +208,7 @@ pnpm install
 pnpm run dev
 ```
 
-UI available at http://localhost:5173
+UI available at http://localhost:3000 (Next.js dev server). It proxies `/api/*` to the backend at `BACKEND_URL` (default `http://localhost:8000`), so run the backend alongside it.
 
 ### Tests
 

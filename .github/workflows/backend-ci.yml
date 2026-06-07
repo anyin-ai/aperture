@@ -25,7 +25,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          # Pinned to 3.12 to match the backend Dockerfile (python:3.12-slim).
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |

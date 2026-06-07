@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, Query as QueryParam
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import AuditResult, AuditRun, Query
-from app.schemas import AuditResultOut, AuditRunOut, DashboardStats
+from app.models import AuditResult, AuditRun
+from app.schemas import AuditResultOut, DashboardStats
 
 router = APIRouter()
 
@@ -45,16 +45,9 @@ def list_results(
         q = q.filter(AuditResult.audit_run_id.in_(run_ids))
 
     results = q.order_by(AuditResult.created_at.desc()).all()
-
-    # Enrich with query text
-    output = []
-    for r in results:
-        query = db.query(Query).filter(Query.id == r.query_id).first()
-        item = AuditResultOut.model_validate(r)
-        item.query_text = query.text if query else None
-        output.append(item)
-
-    return output
+    # query_text is populated automatically from the AuditResult.query_text
+    # ORM property via from_attributes — no manual per-row enrichment needed.
+    return results
 
 
 @router.get("/trends")

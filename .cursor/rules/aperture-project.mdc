@@ -5,16 +5,16 @@ alwaysApply: true
 
 # Aperture — Project Rules
 
-**What it is:** Open-source AI visibility infrastructure. Tracks how brands appear in ChatGPT, Perplexity, and other LLM-powered search. Self-hosted, BYOK. FastAPI backend + React/TypeScript frontend.
+**What it is:** Open-source AI visibility infrastructure. Tracks how brands appear in ChatGPT, Perplexity, and other LLM-powered search. Self-hosted, BYOK. FastAPI backend + Next.js (React/TypeScript) frontend.
 
 **Layout:**
-- `backend/app/` — FastAPI app: `main.py`, `database.py`, `models.py`, `schemas.py`, `routers/`, `services/` (including `services/llm/` for providers)
+- `backend/app/` — FastAPI app: `main.py`, `database.py`, `models.py`, `schemas.py`, `routers/`, `services/` (including `services/llm/` for providers + the `providers.py` catalog)
 - `backend/tests/` — pytest; add tests here for new backend functionality
-- `frontend/src/` — React app: `App.tsx`, `api/`, `components/`, `pages/`, `types/`
+- `frontend/src/` — Next.js App Router app: `app/` (routes, layout, `/api/[...path]` backend proxy), `views/` (page components), `api/`, `components/`, `hooks/`, `types/`
 
-**Backend (Python):** PEP 8, type hints throughout, docstrings for public functions. Small, focused functions. New LLM provider: add `backend/app/services/llm/<provider>_service.py`, wire in `audit_service.py` and `routers/audits.py`, then frontend in `Audits.tsx` and `Settings.tsx`.
+**Backend (Python):** PEP 8, type hints throughout, docstrings for public functions. Small, focused functions. New LLM provider: add `backend/app/services/llm/<provider>_service.py`, add it to the `services/llm/providers.py` catalog, wire in `audit_service.py`, then add the key field in `views/Settings.tsx` (the model dropdown reads `/api/providers`).
 
-**Frontend (TypeScript/React):** Strict mode, functional components + hooks only, Tailwind for styling, no inline styles. Keep components focused.
+**Frontend (TypeScript/React/Next.js):** App Router, strict mode, functional components + hooks only, Tailwind for styling, no inline styles. Interactive components need `'use client'`. Keep components focused.
 
 **Commits:** Conventional — `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`.
 

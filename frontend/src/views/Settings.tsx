@@ -1,6 +1,9 @@
+'use client'
+
 import { useEffect, useState } from 'react'
 import { getSettings, upsertSetting } from '../api'
 import Card from '../components/Card'
+import { useToast } from '../hooks/useToast'
 import { Save, Eye, EyeOff } from 'lucide-react'
 
 const SETTING_DEFS = [
@@ -32,6 +35,7 @@ const SETTING_DEFS = [
 ]
 
 export default function Settings() {
+  const { pushToast } = useToast()
   const [settings, setSettings] = useState<Record<string, string>>({})
   const [drafts, setDrafts] = useState<Record<string, string>>({})
   const [visible, setVisible] = useState<Record<string, boolean>>({})
@@ -43,19 +47,26 @@ export default function Settings() {
       const map: Record<string, string> = {}
       rows.forEach(r => { if (r.value) map[r.key] = r.value })
       setSettings(map)
-    })
+    }).catch(() => {})
   }, [])
 
   const handleSave = async (key: string) => {
     const value = drafts[key] ?? ''
     if (!value.trim()) return
     setSaving(s => ({ ...s, [key]: true }))
-    await upsertSetting(key, value)
-    setSettings(s => ({ ...s, [key]: value }))
-    setDrafts(d => { const n = { ...d }; delete n[key]; return n })
-    setSaving(s => ({ ...s, [key]: false }))
-    setSaved(s => ({ ...s, [key]: true }))
-    setTimeout(() => setSaved(s => ({ ...s, [key]: false })), 2000)
+    try {
+      const updated = await upsertSetting(key, value)
+      // Backend returns the masked value for secrets — use it as saved state.
+      setSettings(s => ({ ...s, [key]: updated.value ?? value }))
+      setDrafts(d => { const n = { ...d }; delete n[key]; return n })
+      setSaved(s => ({ ...s, [key]: true }))
+      pushToast('Saved', 'success')
+      setTimeout(() => setSaved(s => ({ ...s, [key]: false })), 2000)
+    } catch {
+      /* draft is preserved; interceptor already toasted the error */
+    } finally {
+      setSaving(s => ({ ...s, [key]: false }))
+    }
   }
 
   return (
@@ -128,10 +139,17 @@ export default function Settings() {
         })}
 
         <Card className="p-5 bg-gray-50">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">🔒 Privacy Note</h3>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">🔒 Privacy &amp; Security</h3>
           <p className="text-xs text-gray-500 leading-relaxed">
-            API keys are stored in your local SQLite database and are never transmitted to any external service other than 
-            the respective AI provider you are querying. Aperture is fully self-hosted — your data stays on your server.
+            Your keys and audit data stay on your server — they are only transmitted to the AI
+            provider you query. Keys are stored <strong>unencrypted (plaintext)</strong> in the local
+            SQLite database, so anyone with file or shell access to the server can read them.
+            Encryption-at-rest is planned.
+          </p>
+          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-3 leading-relaxed">
+            ⚠️ Aperture is a single-tenant tool with <strong>no built-in authentication</strong>. Do
+            not expose this instance to the public internet — keep it on localhost / a private
+            network, or put it behind a reverse proxy with auth.
           </p>
         </Card>
       </div>

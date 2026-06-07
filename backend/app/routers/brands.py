@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -6,6 +8,11 @@ from app.models import Brand, Competitor
 from app.schemas import BrandCreate, BrandOut, BrandUpdate, CompetitorCreate, CompetitorOut
 
 router = APIRouter()
+
+
+def _encode_aliases(aliases: list[str] | None) -> str | None:
+    """Serialize an alias list to JSON for the Text column (None when empty)."""
+    return json.dumps(aliases) if aliases else None
 
 
 @router.get("/", response_model=list[BrandOut])
@@ -20,12 +27,18 @@ def create_brand(payload: BrandCreate, db: Session = Depends(get_db)):
         domain=payload.domain,
         description=payload.description,
         is_own_brand=payload.is_own_brand,
+        aliases=_encode_aliases(payload.aliases),
     )
     db.add(brand)
     db.flush()
 
     for comp in payload.competitors:
-        db.add(Competitor(brand_id=brand.id, name=comp.name, domain=comp.domain))
+        db.add(Competitor(
+            brand_id=brand.id,
+            name=comp.name,
+            domain=comp.domain,
+            aliases=_encode_aliases(comp.aliases),
+        ))
 
     db.commit()
     db.refresh(brand)
@@ -45,7 +58,12 @@ def update_brand(brand_id: int, payload: BrandUpdate, db: Session = Depends(get_
     brand = db.query(Brand).filter(Brand.id == brand_id).first()
     if not brand:
         raise HTTPException(status_code=404, detail="Brand not found")
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    data = payload.model_dump(exclude_unset=True)
+    # aliases is stored as JSON text, not a raw list — special-case it so the
+    # generic setattr loop doesn't persist a Python list onto a Text column.
+    if "aliases" in data:
+        brand.aliases = _encode_aliases(data.pop("aliases"))
+    for field, value in data.items():
         setattr(brand, field, value)
     db.commit()
     db.refresh(brand)
@@ -68,7 +86,12 @@ def add_competitor(brand_id: int, payload: CompetitorCreate, db: Session = Depen
     brand = db.query(Brand).filter(Brand.id == brand_id).first()
     if not brand:
         raise HTTPException(status_code=404, detail="Brand not found")
-    comp = Competitor(brand_id=brand_id, name=payload.name, domain=payload.domain)
+    comp = Competitor(
+        brand_id=brand_id,
+        name=payload.name,
+        domain=payload.domain,
+        aliases=_encode_aliases(payload.aliases),
+    )
     db.add(comp)
     db.commit()
     db.refresh(comp)
