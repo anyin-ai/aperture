@@ -3,6 +3,8 @@ uvicorn[standard]==0.30.1
 # 2.0.31+ required for Python 3.13 (langhelpers/symbol/IntFlag fixes)
 sqlalchemy>=2.0.31,<2.1
 alembic==1.13.1
+# Postgres driver for Neon/Railway (SQLAlchemy uses postgresql+psycopg://)
+psycopg[binary]>=3.1,<4
 # Pydantic 2.10+ pulls pydantic-core with Python 3.13 wheels (2.7.x requires building from source on 3.13)
 pydantic>=2.10.0,<3
 pydantic-settings>=2.6.0,<3
