@@ -5,7 +5,9 @@ import type { NextConfig } from 'next'
 // need to stop Next from stripping the client's trailing slash before that
 // handler runs, since the backend's routes depend on the exact path.
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  // Standalone output is for the self-hosted Docker image; on Vercel, omit it so
+  // Vercel produces its own optimized build output.
+  output: process.env.VERCEL ? undefined : 'standalone',
   reactStrictMode: true,
   skipTrailingSlashRedirect: true,
 }
