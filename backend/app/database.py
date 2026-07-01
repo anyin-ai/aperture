@@ -16,6 +16,12 @@ elif DATABASE_URL.startswith("postgresql://"):
 engine = create_engine(
     DATABASE_URL,
     connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
+    # Neon (and other cloud Postgres) close idle connections; without these a
+    # reused dead connection raises "SSL connection has been closed
+    # unexpectedly" on the next query. pre_ping validates/reconnects before use;
+    # recycle drops connections older than 5 min. No-op for local SQLite.
+    pool_pre_ping=True,
+    pool_recycle=300,
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
