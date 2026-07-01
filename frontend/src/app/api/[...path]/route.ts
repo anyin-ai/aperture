@@ -27,11 +27,15 @@ async function proxy(req: NextRequest) {
     return NextResponse.json({ detail: 'Backend unreachable' }, { status: 502 })
   }
 
-  const body = await resp.arrayBuffer()
   const respHeaders = new Headers(resp.headers)
   respHeaders.delete('content-encoding')
   respHeaders.delete('content-length')
   respHeaders.delete('transfer-encoding')
+  // 204/205/304 are "null body" statuses — passing any body (even an empty
+  // ArrayBuffer) makes the Response constructor throw, which 500s the proxy.
+  // This is what broke every DELETE (the backend returns 204). Forward null.
+  const nullBody = resp.status === 204 || resp.status === 205 || resp.status === 304
+  const body = nullBody ? null : await resp.arrayBuffer()
   return new NextResponse(body, { status: resp.status, headers: respHeaders })
 }
 
