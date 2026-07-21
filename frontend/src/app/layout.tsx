@@ -18,7 +18,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ToastProvider>
           <div className="flex min-h-screen bg-gray-50">
             <Sidebar />
-            <main className="flex-1 overflow-auto">{children}</main>
+            <main className="min-w-0 flex-1 overflow-auto">{children}</main>
             <Toast />
           </div>
         </ToastProvider>

@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from typing import Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, field_validator
 
@@ -167,3 +167,41 @@ class DashboardStats(BaseModel):
     total_queries_run: int
     avg_mention_rate: Optional[float]
     recent_runs: list[AuditRunOut]
+
+
+# ── Ask Aperture ─────────────────────────────────────────────────────────────────────────────
+
+class AskMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+
+class AskRequest(BaseModel):
+    brand_id: int
+    question: str
+    history: list[AskMessage] = []
+
+
+class AnswerPart(BaseModel):
+    type: Literal["kpi", "sov", "trend", "query_result", "raw_response"]
+    data: dict[str, Any]
+
+
+class AskResponse(BaseModel):
+    answer_text: str
+    grounded: bool
+    refusal: Optional[str] = None
+    parts: list[AnswerPart] = []
+    suggested_followups: list[str] = []
+    tool_trace: list[str] = []
+
+
+class EvidenceResponse(BaseModel):
+    result_id: int
+    brand_id: int
+    query: str
+    provider: str
+    model: str
+    response_text: str
+    brand_name: str
+    competitor_names: list[str]
