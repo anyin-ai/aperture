@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { getDashboard, getTrends, getBrands } from '../api'
 import type { DashboardStats, Brand, TrendPoint } from '../types'
 import StatCard from '../components/StatCard'
@@ -18,15 +19,29 @@ import {
 } from 'recharts'
 
 export default function Dashboard() {
+  const router = useRouter()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [brands, setBrands] = useState<Brand[]>([])
   const [selectedBrand, setSelectedBrand] = useState<number | undefined>()
   const [trends, setTrends] = useState<TrendPoint[]>([])
   const [loading, setLoading] = useState(true)
+  const [onboarded, setOnboarded] = useState(false)
 
   useEffect(() => {
-    getBrands().then(setBrands)
-  }, [])
+    getBrands().then(items => {
+      setBrands(items)
+      if (items.length === 0) {
+        router.replace('/ask')
+        return
+      }
+      const params = new URLSearchParams(window.location.search)
+      const requestedBrand = Number(params.get('brand'))
+      if (requestedBrand && items.some(brand => brand.id === requestedBrand)) {
+        setSelectedBrand(requestedBrand)
+      }
+      setOnboarded(params.get('onboarded') === '1')
+    })
+  }, [router])
 
   useEffect(() => {
     setLoading(true)
@@ -39,6 +54,15 @@ export default function Dashboard() {
       setTrends([])
     }
   }, [selectedBrand])
+
+  const hasActiveRun = stats?.recent_runs.some(run => run.status === 'pending' || run.status === 'running') ?? false
+  useEffect(() => {
+    if (!hasActiveRun) return
+    const timer = window.setInterval(() => {
+      getDashboard(selectedBrand).then(setStats).catch(() => {})
+    }, 3000)
+    return () => window.clearInterval(timer)
+  }, [hasActiveRun, selectedBrand])
 
   // Pivot the long-format trend rows into wide format so same-day runs don't
   // collapse and each provider/model renders as its own line.
@@ -53,6 +77,15 @@ export default function Dashboard() {
 
   return (
     <div className="p-8">
+      {onboarded && (
+        <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <span className="mt-1 h-2 w-2 flex-shrink-0 animate-pulse rounded-full bg-amber-500" />
+          <div>
+            <p className="font-semibold">Your first visibility scan is underway.</p>
+            <p className="mt-0.5 text-xs text-amber-700">This dashboard will refresh as the measurements arrive. You can inspect the exact answers from Audits.</p>
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>

@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { AuditRun, Brand, DashboardStats, ProviderInfo, Query, Setting, TrendPoint } from '../types'
+import type { AskResponse, AuditRun, Brand, DashboardStats, Evidence, ProviderInfo, Query, Setting, TrendPoint } from '../types'
 import { emitToast, parseApiError } from '../hooks/useToast'
 
 const api = axios.create({ baseURL: '/api' })
@@ -65,3 +65,13 @@ export const getTrends = (brandId: number) =>
 export const getSettings = () => api.get<Setting[]>('/settings/').then(r => r.data)
 export const upsertSetting = (key: string, value: string) =>
   api.put<Setting>('/settings/', { key, value }).then(r => r.data)
+
+// Ask Aperture
+export const askAperture = (
+  brandId: number,
+  question: string,
+  history: { role: 'user' | 'assistant'; content: string }[] = [],
+) => api.post<AskResponse>('/ask/', { brand_id: brandId, question, history }).then(r => r.data)
+
+export const getEvidence = (brandId: number, resultId: number) =>
+  api.get<Evidence>(`/ask/evidence/${resultId}`, { params: { brand_id: brandId } }).then(r => r.data)
